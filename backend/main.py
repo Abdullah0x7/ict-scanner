@@ -34,12 +34,16 @@ def scan_market():
     
     # helper function to run the check and clean the name
     def scan_single_pair(ticker):
+        # 1. Import the new function inside the thread to avoid circular errors
+        from scanner import analyze_pair 
+        
         try:
-            setup = check_ict_setup(ticker)
-            if setup:
-                # Clean the name (remove =X) for the frontend
-                setup['symbol'] = ticker.replace("=X", "")
-                return setup
+            # 2. Call the NEW analysis function (Trend + ICT)
+            data = analyze_pair(ticker)
+            
+            # 3. Return the data (it's already cleaned and formatted)
+            return data
+            
         except Exception as e:
             print(f"Error scanning {ticker}: {e}")
             return None
