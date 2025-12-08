@@ -1,7 +1,7 @@
 from fastapi import FastAPI
-from scanner import check_ict_setup
 from fastapi.middleware.cors import CORSMiddleware
 from concurrent.futures import ThreadPoolExecutor
+from scanner import analyze_pair 
 
 app = FastAPI()
 
@@ -12,7 +12,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# The "Standard 28" Forex Pairs (Majors + Minors)
+# The "Standard 28" Forex Pairs + GOLD
 FOREX_PAIRS = [
     # Commodities
     "XAUUSD=X",
@@ -32,28 +32,20 @@ FOREX_PAIRS = [
 def scan_market():
     active_setups = []
     
-    # helper function to run the check and clean the name
     def scan_single_pair(ticker):
-        # 1. Import the new function inside the thread to avoid circular errors
-        from scanner import analyze_pair 
-        
         try:
-            # 2. Call the NEW analysis function (Trend + ICT)
+            # We call the new function here
             data = analyze_pair(ticker)
-            
-            # 3. Return the data (it's already cleaned and formatted)
             return data
-            
         except Exception as e:
             print(f"Error scanning {ticker}: {e}")
             return None
 
     # ThreadPoolExecutor runs these tasks in parallel
-    # max_workers=10 means it scans 10 pairs at a time
     with ThreadPoolExecutor(max_workers=10) as executor:
         results = executor.map(scan_single_pair, FOREX_PAIRS)
     
-    # Filter out None results (pairs with no setup)
+    # Filter out None results
     for res in results:
         if res:
             active_setups.append(res)
