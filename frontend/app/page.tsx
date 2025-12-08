@@ -143,6 +143,82 @@ export default function Home() {
             <p>No data received. Is the backend running?</p>
          </div>
       )}
+      <div className="mt-20 border-t border-slate-800 pt-10">
+        
+        {/* WAITLIST FORM */}
+        <div className="max-w-xl mx-auto text-center mb-16">
+          <h3 className="text-2xl font-bold text-white mb-2">
+            Want alerts sent to your phone? 
+          </h3>
+          <p className="text-gray-400 mb-6">
+            We are building a <b>Pro Mobile App</b> with push notifications for XAUUSD & GBPUSD. Join the waitlist to get early access.
+          </p>
+          
+          <form className="flex flex-col sm:flex-row gap-4" onSubmit={async (e) => {
+            e.preventDefault();
+            const form = e.target as HTMLFormElement;
+            const input = form.elements.namedItem('email') as HTMLInputElement;
+            const email = input.value;
+            const button = form.querySelector('button') as HTMLButtonElement;
+
+            // 1. Set Loading State
+            const originalText = button.innerText;
+            button.innerText = "Joining...";
+            button.disabled = true;
+
+            try {
+               // 2. Send to Backend
+               const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+               await axios.post(`${apiUrl}/waitlist`, { email: email });
+               
+               // 3. Success State
+               alert(`Welcome to the Inner Circle! 🥂\nWe received: ${email}`);
+               input.value = ""; // Clear input
+            } catch (error) {
+               console.error(error);
+               alert("Something went wrong. Please try again.");
+            } finally {
+               // 4. Reset Button
+               button.innerText = originalText;
+               button.disabled = false;
+            }
+          }}>
+            <input 
+              name="email" // Added name attribute for easy access
+              type="email" 
+              placeholder="Enter your email address" 
+              className="flex-1 bg-slate-800 border border-slate-700 text-white px-6 py-3 rounded-lg focus:outline-none focus:border-blue-500 transition"
+              required 
+            />
+            <button 
+              type="submit" 
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transform hover:-translate-y-1 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Join Waitlist
+            </button>
+          </form>         
+          <p className="text-xs text-slate-500 mt-4">
+            🔒 No spam. Unsubscribe at any time.
+          </p>
+        </div>
+
+        {/* FOOTER & DISCLAIMER */}
+        <footer className="text-center text-slate-600 text-xs md:text-sm py-10">
+          <div className="max-w-2xl mx-auto border border-red-900/30 bg-red-900/10 p-4 rounded-lg">
+            <p className="font-bold text-red-400 mb-1">⚠️ RISK DISCLAIMER</p>
+            <p>
+              Trading Forex, Commodities, and CFDs involves a high level of risk and may not be suitable for all investors. 
+              <b>LiquidScan is an analysis tool, not financial advice.</b> The signals generated are based on historical data and algorithmic patterns. 
+              You should never trade money you cannot afford to lose. Past performance is not indicative of future results.
+            </p>
+          </div>
+          <p className="mb-2">
+            &copy; {new Date().getFullYear()} LiquidScan Algorithms. All rights reserved.
+          </p>
+          
+        </footer>
+
+      </div>
     </div>
   );
 }
