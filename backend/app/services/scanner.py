@@ -1,13 +1,19 @@
 import yfinance as yf
 import pandas as pd
-import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 def get_data(ticker):
     # Get more data (5 days) to calculate moving averages properly
-    data = yf.download(ticker, period="5d", interval="15m", progress=False)
-    if isinstance(data.columns, pd.MultiIndex):
-        data.columns = data.columns.droplevel(1)
-    return data
+    try:
+        data = yf.download(ticker, period="5d", interval="15m", progress=False)
+        if isinstance(data.columns, pd.MultiIndex):
+            data.columns = data.columns.droplevel(1)
+        return data
+    except Exception as e:
+        logger.error(f"Failed to fetch data for {ticker}: {e}")
+        return pd.DataFrame()
 
 def analyze_pair(ticker):
     try:
@@ -29,7 +35,6 @@ def analyze_pair(ticker):
             bias = "DOWNTREND 📉"
 
         # --- 2. STRICT ICT SETUP HUNTING ---
-        # (This is your original logic)
         df['Swing_High'] = df['High'][
             (df['High'] > df['High'].shift(1)) & 
             (df['High'] > df['High'].shift(2)) & 
@@ -68,11 +73,11 @@ def analyze_pair(ticker):
         return {
             "symbol": ticker.replace("=X", ""), # Clean name here
             "status": final_status,
-            "price": round(current_price, 4),
+            "price": round(float(current_price), 4),
             "is_hot": is_hot, # Helper for frontend styling
             "time": str(df.index[-1].strftime('%H:%M'))
         }
 
     except Exception as e:
-        print(f"Error on {ticker}: {e}")
+        logger.error(f"Error analyzing {ticker}: {e}")
         return None

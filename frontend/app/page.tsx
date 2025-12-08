@@ -1,15 +1,6 @@
 "use client"
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-
-// Define the shape of our data for TypeScript
-interface Setup {
-  symbol: string;
-  status: string;
-  price: number;
-  is_hot: boolean;
-  time: string;
-}
+import { Setup, fetchSetups as fetchSetupsApi, joinWaitlist } from './services/api';
 
 export default function Home() {
   const [setups, setSetups] = useState<Setup[]>([]);
@@ -19,18 +10,8 @@ export default function Home() {
   const fetchSetups = async () => {
     setLoading(true);
     try {
-      // Use the environment variable for production, fallback to localhost for dev
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-      const res = await axios.get(`${apiUrl}/scan`);
-      
-      // Sort the results: 'is_hot' (ICT Setups) go to the top
-      const sortedData = res.data.active_setups.sort((a: Setup, b: Setup) => {
-        // If a is hot and b is not, a comes first (-1)
-        // If b is hot and a is not, b comes first (1)
-        return (a.is_hot === b.is_hot) ? 0 : a.is_hot ? -1 : 1;
-      });
-
-      setSetups(sortedData);
+      const data = await fetchSetupsApi();
+      setSetups(data);
       setLastUpdated(new Date().toLocaleTimeString());
     } catch (error) {
       console.error("Error fetching data", error);
@@ -168,8 +149,7 @@ export default function Home() {
 
             try {
                // 2. Send to Backend
-               const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-               await axios.post(`${apiUrl}/waitlist`, { email: email });
+               await joinWaitlist(email);
                
                // 3. Success State
                alert(`Welcome to the Inner Circle! 🥂\nWe received: ${email}`);
